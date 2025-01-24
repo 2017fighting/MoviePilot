@@ -48,8 +48,8 @@ class TransferTask(BaseModel):
     """
     文件整理任务
     """
-    fileitem: FileItem = None
-    meta: Any = None
+    fileitem: FileItem
+    meta: Optional[Any] = None
     mediainfo: Optional[Any] = None
     target_directory: Optional[TransferDirectoryConf] = None
     target_storage: Optional[str] = None
@@ -64,6 +64,7 @@ class TransferTask(BaseModel):
     download_hash: Optional[str] = None
     download_history: Optional[DownloadHistory] = None
     manual: Optional[bool] = False
+    background: Optional[bool] = True
 
     def to_dict(self):
         """
