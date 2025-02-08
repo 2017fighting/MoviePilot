@@ -118,7 +118,7 @@ class ConfigModel(BaseModel):
     # 自动检查和更新站点资源包（站点索引、认证等）
     AUTO_UPDATE_RESOURCE: bool = True
     # 是否启用DOH解析域名
-    DOH_ENABLE: bool = True
+    DOH_ENABLE: bool = False
     # 使用 DOH 解析的域名列表
     DOH_DOMAINS: str = ("api.themoviedb.org,"
                         "api.tmdb.org,"
@@ -236,7 +236,14 @@ class ConfigModel(BaseModel):
                                  "doubanio.com",
                                  "lain.bgm.tv",
                                  "raw.githubusercontent.com",
-                                 "github.com"]
+                                 "github.com",
+                                 "thetvdb.com",
+                                 "cctvpic.com",
+                                 "iqiyipic.com",
+                                 "hdslb.com",
+                                 "cmvideo.cn",
+                                 "ykimg.com",
+                                 "qpic.cn"]
     )
     # 允许的图片文件后缀格式
     SECURITY_IMAGE_SUFFIXES: List[str] = Field(

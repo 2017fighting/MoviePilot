@@ -118,6 +118,11 @@ def tmdb_person_credits(person_id: int,
 def tmdb_movies(sort_by: str = "popularity.desc",
                 with_genres: str = "",
                 with_original_language: str = "",
+                with_keywords: str = "",
+                with_watch_providers: str = "",
+                vote_average: float = 0,
+                vote_count: int = 0,
+                release_date: str = "",
                 page: int = 1,
                 _: schemas.TokenPayload = Depends(verify_token)) -> Any:
     """
@@ -126,6 +131,11 @@ def tmdb_movies(sort_by: str = "popularity.desc",
     return RecommendChain().tmdb_movies(sort_by=sort_by,
                                         with_genres=with_genres,
                                         with_original_language=with_original_language,
+                                        with_keywords=with_keywords,
+                                        with_watch_providers=with_watch_providers,
+                                        vote_average=vote_average,
+                                        vote_count=vote_count,
+                                        release_date=release_date,
                                         page=page)
 
 
@@ -133,6 +143,11 @@ def tmdb_movies(sort_by: str = "popularity.desc",
 def tmdb_tvs(sort_by: str = "popularity.desc",
              with_genres: str = "",
              with_original_language: str = "",
+             with_keywords: str = "",
+             with_watch_providers: str = "",
+             vote_average: float = 0,
+             vote_count: int = 0,
+             release_date: str = "",
              page: int = 1,
              _: schemas.TokenPayload = Depends(verify_token)) -> Any:
     """
@@ -141,6 +156,11 @@ def tmdb_tvs(sort_by: str = "popularity.desc",
     return RecommendChain().tmdb_tvs(sort_by=sort_by,
                                      with_genres=with_genres,
                                      with_original_language=with_original_language,
+                                     with_keywords=with_keywords,
+                                     with_watch_providers=with_watch_providers,
+                                     vote_average=vote_average,
+                                     vote_count=vote_count,
+                                     release_date=release_date,
                                      page=page)
 
 
