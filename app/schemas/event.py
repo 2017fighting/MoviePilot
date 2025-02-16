@@ -244,6 +244,7 @@ class DiscoverMediaSource(BaseModel):
     api_path: str = Field(..., description="媒体数据源API地址")
     filter_params: Optional[Dict[str, Any]] = Field(default=None, description="过滤参数")
     filter_ui: Optional[List[dict]] = Field(default=[], description="过滤参数UI配置")
+    depends: Optional[Dict[str, list]] = Field(default=None, description="UI依赖关系字典")
 
 
 class DiscoverSourceEventData(ChainEventData):
@@ -256,6 +257,26 @@ class DiscoverSourceEventData(ChainEventData):
     """
     # 输出参数
     extra_sources: List[DiscoverMediaSource] = Field(default_factory=list, description="额外媒体数据源")
+
+
+class RecommendMediaSource(BaseModel):
+    """
+    推荐媒体数据源的基类
+    """
+    name: str = Field(..., description="数据源名称")
+    api_path: str = Field(..., description="媒体数据源API地址")
+
+
+class RecommendSourceEventData(ChainEventData):
+    """
+    RecommendSource 事件的数据模型
+
+    Attributes:
+        # 输出参数
+        extra_sources (List[RecommendMediaSource]): 额外媒体数据源
+    """
+    # 输出参数
+    extra_sources: List[RecommendMediaSource] = Field(default_factory=list, description="额外媒体数据源")
 
 
 class MediaRecognizeConvertEventData(ChainEventData):

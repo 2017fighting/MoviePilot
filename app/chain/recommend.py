@@ -1,8 +1,9 @@
 import io
 import tempfile
 from pathlib import Path
-from typing import Any, List
+from typing import List
 
+import pillow_avif  # noqa 用于自动注册AVIF支持
 from PIL import Image
 
 from app.chain import ChainBase
@@ -116,6 +117,10 @@ class RecommendChain(ChainBase, metaclass=Singleton):
         sanitized_path = SecurityUtils.sanitize_url_path(url)
         cache_path = settings.CACHE_PATH / "images" / sanitized_path
 
+        # 没有文件类型，则添加后缀，在恶意文件类型和实际需求下的折衷选择
+        if not cache_path.suffix:
+            cache_path = cache_path.with_suffix(".jpg")
+
         # 确保缓存路径和文件类型合法
         if not SecurityUtils.is_safe_path(settings.CACHE_PATH, cache_path, settings.SECURITY_IMAGE_SUFFIXES):
             logger.debug(f"Invalid cache path or file type for URL: {url}, sanitized path: {sanitized_path}")
@@ -224,23 +229,6 @@ class RecommendChain(ChainBase, metaclass=Singleton):
         """
         medias = self.bangumichain.calendar()
         return [media.to_dict() for media in medias[(page - 1) * count: page * count]] if medias else []
-
-    @log_execution_time(logger=logger)
-    @cached(ttl=recommend_ttl, region=recommend_cache_region)
-    def bangumi_discover(self, type: int = 2,
-                         cat: int = None,
-                         sort: str = 'rank',
-                         year: int = None,
-                         count: int = 30,
-                         page: int = 1) -> List[dict]:
-        """
-        搜索Bangumi
-        """
-        medias = self.bangumichain.discover(type=type, cat=cat, sort=sort, year=year,
-                                            limit=count, offset=(page - 1) * count)
-        if medias:
-            return [media.to_dict() for media in medias]
-        return []
 
     @log_execution_time(logger=logger)
     @cached(ttl=recommend_ttl, region=recommend_cache_region)
