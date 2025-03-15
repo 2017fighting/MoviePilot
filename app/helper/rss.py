@@ -225,27 +225,27 @@ class RssHelper:
     }
 
     @staticmethod
-    def parse(url, proxy: bool = False, timeout: int = 15, headers: dict = None) -> Union[List[dict], None]:
+    def parse(url, proxy: bool = False, timeout: int = 15, headers: dict = None) -> Union[List[dict], None, bool]:
         """
         解析RSS订阅URL，获取RSS中的种子信息
         :param url: RSS地址
         :param proxy: 是否使用代理
         :param timeout: 请求超时
         :param headers: 自定义请求头
-        :return: 种子信息列表，如为None代表Rss过期
+        :return: 种子信息列表，如为None代表Rss过期，如果为False则为错误
         """
         # 开始处理
         ret_array: list = []
         if not url:
-            return []
+            return False
         try:
             ret = RequestUtils(proxies=settings.PROXY if proxy else None,
                                timeout=timeout, headers=headers).get_res(url)
             if not ret:
-                return []
+                return False
         except Exception as err:
             logger.error(f"获取RSS失败：{str(err)} - {traceback.format_exc()}")
-            return []
+            return False
         if ret:
             ret_xml = ""
             try:
@@ -301,6 +301,8 @@ class RssHelper:
                         if pubdate:
                             # 转换为时间
                             pubdate = StringUtils.get_time(pubdate)
+                        # 获取豆瓣昵称
+                        nickname = DomUtils.tag_value(item, "dc:createor", default="")
                         # 返回对象
                         tmp_dict = {'title': title,
                                     'enclosure': enclosure,
@@ -308,6 +310,9 @@ class RssHelper:
                                     'description': description,
                                     'link': link,
                                     'pubdate': pubdate}
+                        # 如果豆瓣昵称不为空，返回数据增加豆瓣昵称，供doubansync插件获取
+                        if nickname:
+                            tmp_dict['nickname'] = nickname
                         ret_array.append(tmp_dict)
                     except Exception as e1:
                         logger.debug(f"解析RSS失败：{str(e1)} - {traceback.format_exc()}")
@@ -322,6 +327,7 @@ class RssHelper:
                 ]
                 if ret_xml in _rss_expired_msg:
                     return None
+                return False
         return ret_array
 
     def get_rss_link(self, url: str, cookie: str, ua: str, proxy: bool = False) -> Tuple[str, str]:

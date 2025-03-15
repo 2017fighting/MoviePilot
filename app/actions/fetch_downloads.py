@@ -1,6 +1,7 @@
-from app.actions import BaseAction
+from app.actions import BaseAction, ActionChain
+from app.core.config import global_vars
 from app.schemas import ActionParams, ActionContext
-from log import logger
+from app.log import logger
 
 
 class FetchDownloadsParams(ActionParams):
@@ -17,26 +18,38 @@ class FetchDownloadsAction(BaseAction):
 
     _downloads = []
 
+    def __init__(self, action_id: str):
+        super().__init__(action_id)
+        self.chain = ActionChain()
+        self._downloads = []
+
+    @classmethod
     @property
-    def name(self) -> str:
+    def name(cls) -> str: # noqa
         return "获取下载任务"
 
+    @classmethod
     @property
-    def description(self) -> str:
-        return "获取下载任务，更新任务状态"
+    def description(cls) -> str: # noqa
+        return "获取下载队列中的任务状态"
+
+    @classmethod
+    @property
+    def data(cls) -> dict: # noqa
+        return FetchDownloadsParams().dict()
 
     @property
     def success(self) -> bool:
-        if not self._downloads:
-            return True
-        return True if all([d.completed for d in self._downloads]) else False
+        return self.done
 
-    async def execute(self, params: FetchDownloadsParams, context: ActionContext) -> ActionContext:
+    def execute(self, workflow_id: int, params: dict, context: ActionContext) -> ActionContext:
         """
         更新downloads中的下载任务状态
         """
-        self._downloads = context.downloads
+        __all_complete = False
         for download in self._downloads:
+            if global_vars.is_workflow_stopped(workflow_id):
+                break
             logger.info(f"获取下载任务 {download.download_id} 状态 ...")
             torrents = self.chain.list_torrents(hashs=[download.download_id])
             if not torrents:
@@ -47,6 +60,9 @@ class FetchDownloadsAction(BaseAction):
                 if t.progress >= 100:
                     logger.info(f"下载任务 {download.download_id} 已完成")
                     download.completed = True
-
-        self.job_done()
+                else:
+                    logger.info(f"下载任务 {download.download_id} 未完成")
+                    download.completed = False
+        if all([d.completed for d in self._downloads]):
+            self.job_done()
         return context

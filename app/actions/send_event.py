@@ -1,8 +1,7 @@
-import copy
-
 from app.actions import BaseAction
+from app.core.event import eventmanager
 from app.schemas import ActionParams, ActionContext
-from core.event import eventmanager
+from app.schemas.types import ChainEventType
 
 
 class SendEventParams(ActionParams):
@@ -17,31 +16,33 @@ class SendEventAction(BaseAction):
     发送事件
     """
 
-    __success = False
-
+    @classmethod
     @property
-    def name(self) -> str:
+    def name(cls) -> str: # noqa
         return "发送事件"
 
+    @classmethod
     @property
-    def description(self) -> str:
-        return "发送特定事件"
+    def description(cls) -> str: # noqa
+        return "发送任务执行事件"
+
+    @classmethod
+    @property
+    def data(cls) -> dict: # noqa
+        return SendEventParams().dict()
 
     @property
     def success(self) -> bool:
-        return self.__success
+        return self.done
 
-    async def execute(self, params: SendEventParams, context: ActionContext) -> ActionContext:
+    def execute(self, workflow_id: int, params: dict, context: ActionContext) -> ActionContext:
         """
-        发送events中的事件
+        发送工作流事件，以更插件干预工作流执行
         """
-        if context.events:
-            # 按优先级排序，优先级高的先发送
-            context.events.sort(key=lambda x: x.priority, reverse=True)
-            for event in copy.deepcopy(context.events):
-                eventmanager.send_event(etype=event.event_type, data=event.event_data)
-                context.events.remove(event)
-                self.__success = True
+        # 触发资源下载事件，更新执行上下文
+        event = eventmanager.send_event(ChainEventType.WorkflowExecution, context)
+        if event and event.event_data:
+            context = event.event_data
 
         self.job_done()
         return context
